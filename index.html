@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPA/M-1 - Portal Operacional</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .page-section { display: none !important; }
+        .page-section.active-tab { display: block !important; }
+        
+        /* Estilização das Tabelas Operacionais */
+        .hierarquia-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 11px; font-weight: 600; }
+        .hierarquia-table th { text-transform: uppercase; letter-spacing: 0.1em; font-weight: 900; padding: 10px 15px; background-color: #0b132b; color: #cbd5e1; text-align: center; }
+        .hierarquia-table td { padding: 10px 15px; vertical-align: middle; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; }
+
+        /* Cores de fundo personalizadas baseadas nos escalões */
+        .bg-superiores { background-color: #e2e8f0 !important; color: #0f172a !important; }     
+        .bg-intermediarios { background-color: #d1fae5 !important; color: #064e3b !important; } 
+        .bg-subalternos { background-color: #fef3c7 !important; color: #78350f !important; }    
+        .bg-especiais { background-color: #e0f2fe !important; color: #0c4a6e !important; }       
+        .bg-graduados { background-color: #fee2e2 !important; color: #7f1d1d !important; }      
+        .bg-pracas { background-color: #1e293b !important; color: #f8fafc !important; }         
+
+        /* Container para insígnias reais */
+        .insignia-real { 
+            width: 65px; 
+            height: 32px; 
+            background-color: #0b132b; 
+            border: 1px solid #1e293b; 
+            border-radius: 4px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            overflow: hidden;
+            padding: 2px;
+            margin: 0 auto;
+        }
+        .insignia-real img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        @keyframes float {
+            0 { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float { animation: float 4s ease-in-out infinite; }
+    </style>
+</head>
+<body id="app-body" class="bg-[#050814] text-slate-300 min-h-screen flex flex-col justify-between antialiased selection:bg-[#e5b842] selection:text-black">
+
+    <header id="main-header" class="bg-[#0b1224]/90 backdrop-blur-md border-b border-slate-800 px-4 md:px-8 py-4 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div onclick="alternarAba('inicio')" class="flex items-center gap-3 border border-slate-700 p-1.5 rounded bg-[#050814]/60 cursor-pointer hover:border-[#e5b842] transition">
+                <img src="brasao-cpam1.png" alt="CPA/M-1" class="w-8 h-8 object-contain">
+                <div>
+                    <h1 class="text-white text-xs font-black tracking-widest leading-none uppercase">CPA/M-1</h1>
+                    <span class="text-[9px] text-slate-400 font-bold tracking-wider uppercase">Portal Operacional</span>
+                </div>
+            </div>
+            <nav class="hidden md:flex items-center gap-6 text-[11px] font-black tracking-widest text-slate-400">
+                <button id="nav-inicio" onclick="alternarAba('inicio')" class="hover:text-white pb-1 cursor-pointer transition">INÍCIO</button>
+                <button id="nav-hierarquia" onclick="alternarAba('hierarquia')" class="hover:text-white pb-1 cursor-pointer transition">HIERARQUIA</button>
+                <button id="nav-rso" onclick="alternarAba('rso')" class="hover:text-white pb-1 cursor-pointer transition">RELATÓRIOS (RSO)</button>
+                <button id="nav-admin" onclick="alternarAba('admin')" class="text-amber-400 hover:text-amber-300 pb-1 hidden cursor-pointer transition"><i class="fa-solid0 fa-lock-open mr-1"></i> PAINEL ADMIN</button>
+            </nav>
+            <div class="flex items-center gap-4 text-[11px] font-black tracking-widest">
+                <span id="admin-status" class="text-emerald-400 font-bold hidden"><i class="fa-solid fa-user-shield"></i> QAP ADMIN</span>
+                <button id="btn-login-nav" onclick="alternarAba('login')" class="border border-[#e5b842] text-[#e5b842] hover:bg-[#e5b842] hover:text-black px-4 py-2 rounded font-black uppercase tracking-widest text-[10px] bg-transparent cursor-pointer">ADMINISTRATIVO</button>
+                <button id="btn-logout" onclick="fazerLogout()" class="border border-red-600 text-red-500 hover:bg-red-600 hover:text-white px-4 py-2 rounded font-black uppercase hidden cursor-pointer text-[10px] transition">SAIR (QOD)</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col justify-center">
+
+        <div id="sec-inicio" class="page-section active-tab">
+            <section class="max-w-7xl mx-auto px-6 pt-12 pb-20 grid grid-cols-1 md:grid-cols-2 items-center gap-12">
+                <div class="space-y-6">
+                    <span class="bg-[#0b1224] border border-slate-700 text-[#e5b842] text-[10px] uppercase font-black tracking-widest px-3 py-1 rounded">✦ PMESP</span>
+                    <h2 class="text-4xl md:text-6xl font-black text-white tracking-tight leading-tight">Comando de <br>Policiamento de Área <br><span class="text-[#e5b842] font-serif italic">Metropolitano Um</span></h2>
+                    <p class="text-sm text-slate-400 leading-relaxed max-w-lg">Responsável pela coordenação tática e preservação da ordem pública na região central da capital. Excelência no servir e integração operacional.</p>
+                    <button onclick="alternarAba('rso')" class="inline-flex items-center gap-2 bg-[#e5b842] hover:bg-[#f0c965] text-black text-xs font-black tracking-widest uppercase px-6 py-3.5 rounded transition shadow-lg shadow-[#e5b842]/10 cursor-pointer">ACESSAR RSO <i class="fa-solid fa-chevron-right text-[10px]"></i></button>
+                </div>
+                <div class="flex justify-center items-center">
+                    <img src="brasao-cpam1.png" alt="CPA/M-1" class="w-72 h-72 object-contain drop-shadow-[0_15px_30px_rgba(0,0,0,0.9)] animate-float">
+                </div>
+            </section>
+        </div>
+
+        <div id="sec-hierarquia" class="page-section py-12 px-4 md:px-8">
+            <div class="max-w-7xl mx-auto space-y-8">
+                <div class="border-b border-slate-800 pb-4 flex items-center justify-between gap-4">
+                    <div>
+                        <h3 class="text-3xl font-black text-white uppercase tracking-tight">Efetivo Operacional</h3>
+                        <p class="text-xs text-[#e5b842] uppercase tracking-widest mt-1">Cadeia de Comando Oficial</p>
+                    </div>
+                    <div class="bg-[#0b1224] border border-slate-700 rounded p-2 text-center">
+                        <span id="total-membros" class="block text-xs font-bold text-white">0 Policiais</span>
+                    </div>
+                </div>
+                <div class="space-y-8" id="container-tabelas"></div>
+            </div>
+        </div>
+
+        <div id="sec-rso" class="page-section py-20 px-4">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-8 border-b border-slate-800 pb-12 mb-16">
+                    <img src="brasao-cpam1.png" alt="CPA/M-1" class="w-24 h-24 object-contain">
+                    <div class="text-center space-y-2">
+                        <h3 class="text-white text-4xl font-black uppercase tracking-tighter">Relatórios</h3>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.4em]">Comando de Policiamento de Área - Metropolitano Um</p>
+                        <p class="text-[9px] text-[#e5b842] font-black uppercase tracking-[0.2em]">Centro - São Paulo</p>
+                    </div>
+                    <img src="LogoPMESP.png" alt="PMESP" class="w-24 h-24 object-contain">
+                </div>
+
+                <div class="flex items-center justify-center gap-4 mb-16">
+                    <div class="h-[1px] bg-slate-800 flex-1 max-w-[200px]"></div>
+                    <span class="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">Envio de Documento</span>
+                    <div class="h-[1px] bg-slate-800 flex-1 max-w-[200px]"></div>
+                </div>
+
+                <div class="max-w-xl mx-auto bg-[#0b1224] border border-slate-700 p-6 rounded-xl space-y-4 mb-8">
+                    <h4 class="text-white font-black text-sm uppercase tracking-wider text-center border-b border-slate-700 pb-2 text-[#e5b842]"><i class="fa-solid fa-paper-plane"></i> Formular Novo RSO</h4>
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                        <input type="text" id="rso-re" placeholder="RE do Relator" class="bg-[#050814] border border-slate-700 p-3 rounded text-white outline-none focus:border-[#e5b842]">
+                        <input type="text" id="rso-nome" placeholder="Nome de Guerra" class="bg-[#050814] border border-slate-700 p-3 rounded text-white outline-none focus:border-[#e5b842]">
+                        <input type="text" id="rso-vtr" placeholder="Prefixo da VTR" class="bg-[#050814] border border-slate-700 p-3 rounded text-white outline-none focus:border-[#e5b842] col-span-2">
+                        <textarea id="rso-texto" placeholder="Resumo das principais ocorrências e alterações do serviço..." rows="3" class="bg-[#050814] border border-slate-700 p-3 rounded text-white outline-none focus:border-[#e5b842] col-span-2"></textarea>
+                        <button onclick="enviarRSO()" class="bg-[#e5b842] hover:bg-[#f0c965] text-black font-black uppercase text-xs p-3 rounded col-span-2 tracking-widest cursor-pointer transition">Protocolar RSO</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="sec-admin" class="page-section py-12 px-4 md:px-8">
+            <div class="max-w-7xl mx-auto space-y-8">
+                <div class="border-b border-slate-800 pb-4">
+                    <h3 class="text-3xl font-black text-white uppercase tracking-tight"><i class="fa-solid fa-sliders text-[#e5b842]"></i> Sala de Controle Interno</h3>
+                    <p class="text-xs text-amber-400 uppercase tracking-widest mt-1">Gerenciamento Avançado de Efetivo e Relatórios</p>
+                </div>
+
+                <div class="bg-[#0b1224] border border-slate-700 p-6 rounded-xl space-y-4">
+                    <h4 class="text-[#e5b842] font-black text-xs uppercase tracking-wider"><i class="fa-solid fa-user-plus"></i> Incluir Policial na Cadeia de Comando</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                        <input type="text" id="cad-cpf" placeholder="CPF / RE" class="bg-[#050814] border border-slate-700 p-2.5 rounded text-white outline-none focus:border-[#e5b842]">
+                        <input type="text" id="cad-nome" placeholder="Nome de Guerra (QRA)" class="bg-[#050814] border border-slate-700 p-2.5 rounded text-white outline-none focus:border-[#e5b842]">
+                        <select id="cad-categoria" class="bg-[#050814] border border-slate-700 p-2.5 rounded text-white outline-none focus:border-[#e5b842]">
+                            <option value="superiores">OFICIAL SUPERIOR (Cinza)</option>
+                            <option value="intermediarios">OFICIAL INTERMEDIÁRIO (Verde)</option>
+                            <option value="subalternos">OFICIAL SUBALTERNO (Amarelo)</option>
+                            <option value="especiais">PRAÇAS ESPECIAIS (Azul)</option>
+                            <option value="graduados">PRAÇAS GRADUADOS (Vermelho)</option>
+                            <option value="pracas">PRAÇAS (Azul Escuro)</option>
+                        </select>
+                        <select id="cad-postograd" class="bg-[#050814] border border-slate-700 p-2.5 rounded text-white outline-none focus:border-[#e5b842]">
+                            <option value="Coronel QOPM">Coronel QOPM</option>
+                            <option value="Tenente Coronel QOPM">Tenente Coronel QOPM</option>
+                            <option value="Major QOPM">Major QOPM</option>
+                            <option value="Capitão QOPM">Capitão QOPM</option>
+                            <option value="1º Tenente QOPM">1º Tenente QOPM</option>
+                            <option value="2º Tenente QOPM">2º Tenente QOPM</option>
+                            <option value="Aspirante a Oficial">Aspirante a Oficial</option>
+                            <option value="Subtenente PM">Subtenente PM</option>
+                            <option value="1º Sargento QPPM">1º Sargento QPPM</option>
+                            <option value="2º Sargento QPPM">2º Sargento QPPM</option>
+                            <option value="3º Sargento QPPM">3º Sargento QPPM</option>
+                            <option value="Cabo QPPM">Cabo QPPM</option>
+                            <option value="Soldado 1° Classe QPPM">Soldado 1° Classe QPPM</option>
+                        </select>
+                        <input type="text" id="cad-funcao" placeholder="Função Operacional" class="bg-[#050814] border border-slate-700 p-2.5 rounded text-white outline-none focus:border-[#e5b842]">
+                        <input type="text" id="cad-pelotao" placeholder="Pelotão / Cia" class="bg-[#050814] border border-slate-700 p-2.5 rounded text-white outline-none focus:border-[#e5b842]">
+                        <button onclick="adicionarPolicial()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-wider rounded p-2.5 cursor-pointer transition sm:col-span-3">Salvar Policial no Banco de Dados</button>
+                    </div>
+                </div>
+
+                <div class="bg-[#0b1224] border border-slate-700 p-6 rounded-xl space-y-4">
+                    <h4 class="text-amber-400 font-black text-xs uppercase tracking-wider"><i class="fa-solid fa-folder-open"></i> Controle de Triagem de RSO</h4>
+                    <div class="overflow-x-auto rounded-lg border border-slate-800">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-[#050814] text-slate-400 uppercase font-black tracking-wider text-[10px]">
+                                <tr>
+                                    <th class="p-3">RE</th><th class="p-3">Policial</th><th class="p-3">VTR</th><th class="p-3">Relato</th><th class="p-3 text-center">Status</th><th class="p-3 text-center">Decisão</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-rso-admin" class="divide-y divide-slate-800 font-medium">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="sec-login" class="page-section min-h-screen w-full relative">
+            <button onclick="alternarAba('inicio')" class="absolute top-8 left-8 z-50 text-slate-400 hover:text-white text-sm font-medium flex items-center gap-2 cursor-pointer transition duration-200 bg-transparent border-none outline-none">
+                <i class="fa-solid fa-arrow-left-long text-xs"></i> Voltar
+            </button>
+            <div class="grid grid-cols-1 md:grid-cols-2 min-h-screen w-full">
+                <div class="bg-gradient-to-br from-[#0b1224] to-[#050814] border-r border-slate-800 flex flex-col justify-center items-center p-8 text-center">
+                    <img src="brasao-cpam1.png" alt="CPA/M-1" class="w-48 h-48 object-contain animate-float drop-shadow-[0_0_25px_rgba(229,184,66,0.15)] mb-6">
+                    <h3 class="text-white font-black text-xl tracking-tight uppercase">PMESP - Comando Central</h3>
+                    <p class="text-[11px] text-slate-400 uppercase tracking-widest mt-2 max-w-sm">Sistema administrativo interno. Acesso restrito.</p>
+                </div>
+                <div class="bg-[#050814] flex flex-col justify-center items-center p-8 sm:p-16">
+                    <div class="w-full max-w-sm space-y-6">
+                        <h4 class="text-white font-black text-2xl tracking-tight">Autenticação Digital</h4>
+                        <div class="space-y-4">
+                            <input type="text" id="login-re" placeholder="Usuário Admin" class="w-full bg-[#0b1224] border border-slate-700 rounded p-3.5 text-white text-xs text-center outline-none focus:border-[#e5b842] transition">
+                            <input type="password" id="login-senha" placeholder="Palavra-Chave" class="w-full bg-[#0b1224] border border-slate-700 rounded p-3.5 text-white text-xs text-center outline-none focus:border-[#e5b842] transition">
+                            <button onclick="efetuarLogin()" class="w-full bg-[#e5b842] hover:bg-[#f0c965] text-black font-black text-xs uppercase tracking-widest py-3.5 rounded cursor-pointer transition">Avançar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer id="main-footer" class="bg-[#03050d] py-4 px-6 border-t border-slate-800 text-center text-[9px] text-slate-500 tracking-widest font-black uppercase">
+        &copy; 2026 CPA/M-1 — CENTRO DE SÃO PAULO — PMESP — RESTRITO
+    </footer>
+
+    <script>
+        // BANCO DE EFETIVO PADRÃO
+        const efetivoInicial = [
+            { cpf: "6524", nome: "Davi Calebe", categoria: "superiores", graduacao: "Coronel QOPM", funcao: "Comandante CPA-M1", pelotao: "CPA-M1" },
+            { cpf: "4943", nome: "Carlos Pavano", categoria: "superiores", graduacao: "Tenente Coronel QOPM", funcao: "SubComandante CPA-M1", pelotao: "CPA-M1" },
+            { cpf: "11499", nome: "Marvin Steawrt", categoria: "superiores", graduacao: "Major QOPM", funcao: "Operacional CPA-M1", pelotao: "CPA-M1" },
+            { cpf: "11276", nome: "Matheus Kevin", categoria: "intermediarios", graduacao: "Capitão QOPM", funcao: "Coordenador Operacional", pelotao: "CPA-M1" },
+            { cpf: "3235", nome: "Tiago Heinzen", categoria: "intermediarios", graduacao: "Capitão QOPM", funcao: "Coordenador Administrativo", pelotao: "CPA-M1" },
+            { cpf: "1361", nome: "Nicollas Gabriel", categoria: "graduados", graduacao: "Subtenente PM", funcao: "Operacional CPA-M1", pelotao: "CPA-M1" },
+            { cpf: "10754", nome: "Valentina Moretti", categoria: "graduados", graduacao: "2º Sargento QPPM", funcao: "Operacional CPA-M1", pelotao: "CPA-M1" },
+            { cpf: "10883", nome: "Betao Salazar", categoria: "pracas", graduacao: "Cabo QPPM", funcao: "Operacional CPA-M1", pelotao: "CPA-M1" },
+            { cpf: "10675", nome: "Jorge Novaes", categoria: "pracas", graduacao: "Cabo QPPM", funcao: "Operacional CPA-M1", pelotao: "CPA-M1" },
+            { cpf: "11041", nome: "Eduardo Henrique", categoria: "pracas", graduacao: "Cabo QPPM", funcao: "Operacional CPA-M1", pelotao: "CPA-M1" },
+            { cpf: "11891", nome: "Emanuel Silva", categoria: "pracas", graduacao: "Soldado 1° Classe QPPM", funcao: "Operacional CPA-M1", pelotao: "CPA-M1" }
+        ];
+
+        // BANCO DE RSO INICIAL (Para testes)
+        const rsoIniciais = [
+            { id: 1, re: "11891", nome: "Emanuel Silva", vtr: "M-01102", texto: "Patrulhamento preventivo sem alterações na Praça da Sé.", status: "Pendente" }
+        ];
+
+        // Inicializa o banco se estiver vazio
+        if (!localStorage.getItem('banco_efetivo_v16')) {
+            localStorage.setItem('banco_efetivo_v16', JSON.stringify(efetivoInicial));
+        }
+        if (!localStorage.getItem('banco_rso_v16')) {
+            localStorage.setItem('banco_rso_v16', JSON.stringify(rsoIniciais));
+        }
+
+        function obterNomeImagem(graduacao) {
+            switch(graduacao) {
+                case "Coronel QOPM": return "Coronel QOPM.png";
+                case "Tenente Coronel QOPM": return "Tenente Coronel QOPM.png";
+                case "Major QOPM": return "Major QOPM.png";
+                case "Capitão QOPM": return "Capitão QOPM.png";
+                case "1º Tenente QOPM": return "1º Tenente QOPM.png";
+                case "2º Tenente QOPM": return "2º Tenente QOPM.png";
+                case "Subtenente PM": return "Subtenente_PM.png";
+                case "1º Sargento QPPM": return "1º Sargento QPPM.png";
+                case "2º Sargento QPPM": return "2º Sargento QPPM.png";
+                case "3º Sargento QPPM": return "3º Sargento QPPM.png";
+                case "Cabo QPPM": return "Cabo QPPM.png";
+                case "Soldado 1° Classe QPPM": return "Soldado 1_C.png";
+                default: return "Cabo QPPM.png";
+            }
+        }
+
+        // VERIFICAÇÃO SE O USUÁRIO ESTÁ AUTENTICADO DE VERDADE
+        function isAdminLogado() {
+            return sessionStorage.getItem('isAdmin') === 'true';
+        }
+
+        function alternarAba(aba) {
+            // BLOQUEIO RADICAL: Se tentar entrar na aba admin sem login, joga pro login
+            if (aba === 'admin' && !isAdminLogado()) {
+                alert("ACESSO RESTRITO: Efetue o login administrativo primeiro.");
+                aba = 'login';
+            }
+
+            document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active-tab'));
+            const alvo = document.getElementById('sec-' + aba);
+            if(alvo) alvo.classList.add('active-tab');
+
+            const header = document.getElementById('main-header');
+            const footer = document.getElementById('main-footer');
+
+            if(aba === 'login') {
+                header.style.display = 'none'; footer.style.display = 'none';
+            } else {
+                header.style.display = 'block'; footer.style.display = 'block';
+            }
+
+            if (aba === 'hierarquia') renderizarTabelas();
+            if (aba === 'admin') renderizarPainelAdmin();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function efetuarLogin() {
+            const re = document.getElementById('login-re').value;
+            const senha = document.getElementById('login-senha').value;
+
+            if (re === "admin" && senha === "123") {
+                sessionStorage.setItem('isAdmin', 'true'); // Define a sessão ativa
+                
+                // Exibe as travas visuais do admin
+                document.getElementById('admin-status').classList.remove('hidden');
+                document.getElementById('nav-admin').classList.remove('hidden');
+                document.getElementById('btn-logout').classList.remove('hidden');
+                document.getElementById('btn-login-nav').classList.add('hidden');
+                
+                alternarAba('admin');
+            } else { 
+                alert("Credenciais incorretas. Acesso negado."); 
+            }
+        }
+
+        function fazerLogout() {
+            sessionStorage.removeItem('isAdmin'); // Derruba a sessão ativa
+            
+            document.getElementById('admin-status').classList.add('hidden');
+            document.getElementById('nav-admin').classList.add('hidden');
+            document.getElementById('btn-logout').classList.add('hidden');
+            document.getElementById('btn-login-nav').classList.remove('hidden');
+            
+            alternarAba('inicio');
+        }
+
+        function renderizarTabelas() {
+            let lista = JSON.parse(localStorage.getItem('banco_efetivo_v16')) || [];
+            document.getElementById('total-membros').innerText = `${lista.length} Policiais`;
+
+            const categorias = {
+                superiores: { titulo: "OFICIAIS SUPERIORES", classeCor: "bg-superiores", dados: [] },
+                intermediarios: { titulo: "OFICIAIS INTERMEDIÁRIOS", classeCor: "bg-intermediarios", dados: [] },
+                subalternos: { titulo: "OFICIAIS SUBALTERNOS", classeCor: "bg-subalternos", dados: [] },
+                especiais: { titulo: "PRAÇAS ESPECIAIS", classeCor: "bg-especiais", dados: [] },
+                graduados: { titulo: "PRAÇAS GRADUADOS", classeCor: "bg-graduados", dados: [] },
+                pracas: { titulo: "PRAÇAS", classeCor: "bg-pracas", dados: [] }
+            };
+
+            lista.forEach(p => { if(categorias[p.categoria]) categorias[p.categoria].dados.push(p); });
+
+            let htmlFinal = "";
+            const adminMode = isAdminLogado();
+
+            for (let chave in categorias) {
+                const cat = categorias[chave];
+                if(cat.dados.length === 0) continue;
+                let linhas = "";
+                cat.dados.forEach(p => {
+                    linhas += `
+                        <tr class="${cat.classeCor}">
+                            <td class="font-mono">${p.cpf}</td>
+                            <td class="font-bold">${p.nome}</td>
+                            <td><div class="insignia-real"><img src="${obterNomeImagem(p.graduacao)}"></div></td>
+                            <td class="font-bold">${p.graduacao}</td>
+                            <td class="font-bold">${p.funcao}</td>
+                            <td>—</td>
+                            <td>${p.pelotao}</td>
+                            <td class="font-mono text-[10px]">25/05/2026</td>
+                            <td class="text-[10px]">Integração</td>
+                            ${adminMode ? `<td><button onclick="removerPolicial('${p.cpf}')" class="bg-red-600 hover:bg-red-700 text-white font-black px-2 py-1 rounded text-[9px] cursor-pointer">DELETAR</button></td>` : ""}
+                        </tr>
+                    `;
+                });
+                htmlFinal += `
+                    <div class="space-y-3">
+                        <div class="bg-[#0b1224] border border-slate-700 px-4 py-2 rounded text-white font-black text-xs uppercase text-center">${cat.titulo}</div>
+                        <div class="overflow-x-auto rounded-lg border border-slate-800">
+                            <table class="hierarquia-table">
+                                <thead><tr><th>CPF</th><th>QRA</th><th>INSÍGNIA</th><th>GRADUAÇÃO</th><th>FUNÇÃO</th><th>PROMOÇÃO</th><th>PELOTÃO</th><th>ENTRADA</th><th>EDITAL</th>${adminMode ? "<th>AÇÕES</th>" : ""}</tr></thead>
+                                <tbody>${linhas}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+            document.getElementById('container-tabelas').innerHTML = htmlFinal;
+        }
+
+        // FUNÇÕES DO FLUXO DO RSO
+        function enviarRSO() {
+            const re = document.getElementById('rso-re').value.trim();
+            const nome = document.getElementById('rso-nome').value.trim();
+            const vtr = document.getElementById('rso-vtr').value.trim();
+            const texto = document.getElementById('rso-texto').value.trim();
+
+            if(!re || !nome || !vtr || !texto) { alert("Preencha todos os campos do RSO!"); return; }
+
+            let listaRSO = JSON.parse(localStorage.getItem('banco_rso_v16')) || [];
+            listaRSO.push({ id: Date.now(), re, nome, vtr, texto, status: "Pendente" });
+            localStorage.setItem('banco_rso_v16', JSON.stringify(listaRSO));
+
+            alert("RSO protocolado com sucesso! Aguardando triagem do Comando.");
+            document.getElementById('rso-re').value = "";
+            document.getElementById('rso-nome').value = "";
+            document.getElementById('rso-vtr').value = "";
+            document.getElementById('rso-texto').value = "";
+        }
+
+        function renderizarPainelAdmin() {
+            if (!isAdminLogado()) return;
+            let listaRSO = JSON.parse(localStorage.getItem('banco_rso_v16')) || [];
+            let html = "";
+
+            listaRSO.forEach(r => {
+                let badgeCor = r.status === "Pendente" ? "text-amber-400 bg-amber-500/10" : r.status === "Aprovado" ? "text-emerald-400 bg-emerald-500/10" : "text-red-400 bg-red-500/10";
+                
+                html += `
+                    <tr class="bg-[#0b1224] border-b border-slate-800 text-slate-300">
+                        <td class="p-3 font-mono text-[#e5b842]">${r.re}</td>
+                        <td class="p-3 font-bold text-white">${r.nome}</td>
+                        <td class="p-3 font-bold">${r.vtr}</td>
+                        <td class="p-3 text-slate-400 max-w-xs break-words">${r.texto}</td>
+                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-black uppercase ${badgeCor}">${r.status}</span></td>
+                        <td class="p-3 text-center space-x-1 whitespace-nowrap">
+                            ${r.status === "Pendente" ? `
+                                <button onclick="decidirRSO(${r.id}, 'Aprovado')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-2 py-1 rounded text-[10px] cursor-pointer">APROVAR</button>
+                                <button onclick="decidirRSO(${r.id}, 'Reprovado')" class="bg-red-600 hover:bg-red-500 text-white font-black px-2 py-1 rounded text-[10px] cursor-pointer">REPROVAR</button>
+                            ` : `<span class="text-slate-600 text-[10px]">Concluído</span>`}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('tabela-rso-admin').innerHTML = html || `<tr><td colspan="6" class="text-center p-6 text-slate-500">Nenhum relatório enviado para análise.</td></tr>`;
+        }
+
+        function decidirRSO(id, decisao) {
+            let listaRSO = JSON.parse(localStorage.getItem('banco_rso_v16')) || [];
+            listaRSO = listaRSO.map(r => {
+                if (r.id === id) r.status = decisao;
+                return r;
+            });
+            localStorage.setItem('banco_rso_v16', JSON.stringify(listaRSO));
+            renderizarPainelAdmin();
+        }
+
+        // CADASTRO E EDIÇÃO DE HIERARQUIA
+        function adicionarPolicial() {
+            if (!isAdminLogado()) return;
+            const cpf = document.getElementById('cad-cpf').value.trim();
+            const nome = document.getElementById('cad-nome').value.trim();
+            const cat = document.getElementById('cad-categoria').value;
+            const grad = document.getElementById('cad-postograd').value;
+            const func = document.getElementById('cad-funcao').value.trim() || "---";
+            const pel = document.getElementById('cad-pelotao').value.trim() || "---";
+
+            if (!cpf || !nome) { alert("Insira o RE e o Nome de Guerra!"); return; }
+
+            let lista = JSON.parse(localStorage.getItem('banco_efetivo_v16')) || [];
+            lista.push({ cpf, nome, categoria: cat, graduacao: grad, funcao: func, pelotao: pel });
+            localStorage.setItem('banco_efetivo_v16', JSON.stringify(lista));
+            
+            alert("Policial incorporado com sucesso!");
+            document.getElementById('cad-cpf').value = "";
+            document.getElementById('cad-nome').value = "";
+            renderizarPainelAdmin();
+        }
+
+        function removerPolicial(cpf) {
+            if (!isAdminLogado()) return;
+            if (confirm("Deseja desligar permanentemente este policial do efetivo?")) {
+                let lista = JSON.parse(localStorage.getItem('banco_efetivo_v16')) || [];
+                lista = lista.filter(p => p.cpf !== cpf);
+                localStorage.setItem('banco_efetivo_v16', JSON.stringify(lista));
+                renderizarTabelas();
+            }
+        }
+
+        // Mantém o estado ao recarregar a página (F5)
+        window.onload = function() {
+            if (isAdminLogado()) {
+                document.getElementById('admin-status').classList.remove('hidden');
+                document.getElementById('nav-admin').classList.remove('hidden');
+                document.getElementById('btn-logout').classList.remove('hidden');
+                document.getElementById('btn-login-nav').classList.add('hidden');
+            }
+            renderizarTabelas();
+        };
+    </script>
+</body>
+</html>
