@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
 <link rel="shortcut icon" href="brasao-cpam1.png" type="image/x-icon">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .page-section { display: none !important; }
@@ -230,6 +231,10 @@
     </footer>
 
     <script>
+const supabaseUrl = 'https://cepsfgwnrhpxbdaqsjhe.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlcHNmZ3ducmhweGJkYXFzamhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NzIzNjksImV4cCI6MjA5NTM0ODM2OX0.WdxCMa7rTQCs-R6lFR9YeUnEUl0e8GRESsIoCOSsQJY';
+const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
         // BANCO DE EFETIVO PADRÃO
         const efetivoInicial = [
             { cpf: "6524", nome: "Davi Calebe", categoria: "superiores", graduacao: "Coronel QOPM", funcao: "Comandante CPA-M1", pelotao: "CPA-M1" },
@@ -278,7 +283,7 @@
 
         // VERIFICAÇÃO SE O USUÁRIO ESTÁ AUTENTICADO DE VERDADE
         function isAdminLogado() {
-            return sessionStorage.getItem('isAdmin') === 'true';
+            return sessionStorage.getItem('authAdmin') === 'true';
         }
 
         function alternarAba(aba) {
@@ -306,23 +311,30 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function efetuarLogin() {
-            const re = document.getElementById('login-re').value;
-            const senha = document.getElementById('login-senha').value;
+        async function efetuarLogin() {
+            const re = document.getElementById('login-re').value.trim();
+            const senha = document.getElementById('login-senha').value.trim();
 
-            if (re === "admin" && senha === "cpam12026") {
-                sessionStorage.setItem('isAdmin', 'true'); // Define a sessão ativa
-                
-                // Exibe as travas visuais do admin
-                document.getElementById('admin-status').classList.remove('hidden');
-                document.getElementById('nav-admin').classList.remove('hidden');
-                document.getElementById('btn-logout').classList.remove('hidden');
-                document.getElementById('btn-login-nav').classList.add('hidden');
-                
-                alternarAba('admin');
-            } else { 
-                alert("Credenciais incorretas. Acesso negado."); 
+            const { data, error } = await supabaseClient
+                .from('admins')
+                .select('*')
+                .eq('usuario', re)
+                .eq('senha', senha)
+                .single();
+
+            if (error || !data) {
+                alert("Credenciais incorretas. Acesso negado.");
+                return;
             }
+
+            sessionStorage.setItem('authAdmin', 'true');
+
+            document.getElementById('admin-status').classList.remove('hidden');
+            document.getElementById('nav-admin').classList.remove('hidden');
+            document.getElementById('btn-logout').classList.remove('hidden');
+            document.getElementById('btn-login-nav').classList.add('hidden');
+
+            alternarAba('admin');
         }
 
         function fazerLogout() {
@@ -336,8 +348,8 @@
             alternarAba('inicio');
         }
 
-        function renderizarTabelas() {
-            let lista = JSON.parse(localStorage.getItem('banco_efetivo_v16')) || [];
+        async function renderizarTabelas() {
+            const { data: lista = [] } = await supabaseClient.from('policiais').select('*');
             document.getElementById('total-membros').innerText = `${lista.length} Policiais`;
 
             const categorias = {
@@ -390,7 +402,7 @@
         }
 
         // FUNÇÕES DO FLUXO DO RSO
-        function enviarRSO() {
+        async function enviarRSO() {
             const re = document.getElementById('rso-re').value.trim();
             const nome = document.getElementById('rso-nome').value.trim();
             const vtr = document.getElementById('rso-vtr').value.trim();
@@ -398,11 +410,17 @@
 
             if(!re || !nome || !vtr || !texto) { alert("Preencha todos os campos do RSO!"); return; }
 
-            let listaRSO = JSON.parse(localStorage.getItem('banco_rso_v16')) || [];
-            listaRSO.push({ id: Date.now(), re, nome, vtr, texto, status: "Pendente" });
-            localStorage.setItem('banco_rso_v16', JSON.stringify(listaRSO));
+            const { error } = await supabaseClient
+                .from('rso')
+                .insert([{ re, nome, vtr, texto, status: 'Pendente' }]);
 
-            alert("RSO protocolado com sucesso! Aguardando triagem do Comando.");
+            if(error){
+                alert("Erro ao enviar RSO.");
+                return;
+            }
+
+            alert("RSO protocolado com sucesso!");
+
             document.getElementById('rso-re').value = "";
             document.getElementById('rso-nome').value = "";
             document.getElementById('rso-vtr').value = "";
@@ -448,8 +466,9 @@
         }
 
         // CADASTRO E EDIÇÃO DE HIERARQUIA
-        function adicionarPolicial() {
+        async function adicionarPolicial() {
             if (!isAdminLogado()) return;
+
             const cpf = document.getElementById('cad-cpf').value.trim();
             const nome = document.getElementById('cad-nome').value.trim();
             const cat = document.getElementById('cad-categoria').value;
@@ -459,20 +478,30 @@
 
             if (!cpf || !nome) { alert("Insira o RE e o Nome de Guerra!"); return; }
 
-            let lista = JSON.parse(localStorage.getItem('banco_efetivo_v16')) || [];
-            lista.push({ cpf, nome, categoria: cat, graduacao: grad, funcao: func, pelotao: pel });
-            localStorage.setItem('banco_efetivo_v16', JSON.stringify(lista));
-            
+            const { error } = await supabaseClient
+                .from('policiais')
+                .insert([{
+                    re: cpf,
+                    nome,
+                    categoria: cat,
+                    graduacao: grad,
+                    funcao: func,
+                    pelotao: pel
+                }]);
+
+            if(error){
+                alert("Erro ao cadastrar policial.");
+                return;
+            }
+
             alert("Policial incorporado com sucesso!");
-            document.getElementById('cad-cpf').value = "";
-            document.getElementById('cad-nome').value = "";
-            renderizarPainelAdmin();
+            renderizarTabelas();
         }
 
         function removerPolicial(cpf) {
             if (!isAdminLogado()) return;
             if (confirm("Deseja desligar permanentemente este policial do efetivo?")) {
-                let lista = JSON.parse(localStorage.getItem('banco_efetivo_v16')) || [];
+                const { data: lista = [] } = await supabaseClient.from('policiais').select('*');
                 lista = lista.filter(p => p.cpf !== cpf);
                 localStorage.setItem('banco_efetivo_v16', JSON.stringify(lista));
                 renderizarTabelas();
