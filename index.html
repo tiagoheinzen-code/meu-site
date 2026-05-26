@@ -348,59 +348,87 @@ const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
             alternarAba('inicio');
         }
 
-        async function renderizarTabelas() {
-            const { data: lista = [] } = await supabaseClient.from('policiais').select('*');
-            document.getElementById('total-membros').innerText = `${lista.length} Policiais`;
+       async function renderizarTabelas() {
 
-            const categorias = {
-                superiores: { titulo: "OFICIAIS SUPERIORES", classeCor: "bg-superiores", dados: [] },
-                intermediarios: { titulo: "OFICIAIS INTERMEDIÁRIOS", classeCor: "bg-intermediarios", dados: [] },
-                subalternos: { titulo: "OFICIAIS SUBALTERNOS", classeCor: "bg-subalternos", dados: [] },
-                especiais: { titulo: "PRAÇAS ESPECIAIS", classeCor: "bg-especiais", dados: [] },
-                graduados: { titulo: "PRAÇAS GRADUADOS", classeCor: "bg-graduados", dados: [] },
-                pracas: { titulo: "PRAÇAS", classeCor: "bg-pracas", dados: [] }
-            };
+    const { data, error } = await supabaseClient
+        .from('policiais')
+        .select('*');
 
-            lista.forEach(p => { if(categorias[p.categoria]) categorias[p.categoria].dados.push(p); });
+    if (error) {
+        console.log(error);
+        return;
+    }
 
-            let htmlFinal = "";
-            const adminMode = isAdminLogado();
+    document.getElementById('total-membros').innerText =
+        `${data.length} Policiais`;
 
-            for (let chave in categorias) {
-                const cat = categorias[chave];
-                if(cat.dados.length === 0) continue;
-                let linhas = "";
-                cat.dados.forEach(p => {
-                    linhas += `
-                        <tr class="${cat.classeCor}">
-                            <td class="font-mono">${p.cpf}</td>
-                            <td class="font-bold">${p.nome}</td>
-                            <td><div class="insignia-real"><img src="${obterNomeImagem(p.graduacao)}"></div></td>
-                            <td class="font-bold">${p.graduacao}</td>
-                            <td class="font-bold">${p.funcao}</td>
-                            <td>—</td>
-                            <td>${p.pelotao}</td>
-                            <td class="font-mono text-[10px]">25/05/2026</td>
-                            <td class="text-[10px]">Integração</td>
-                            ${adminMode ? `<td><button onclick="removerPolicial('${p.cpf}')" class="bg-red-600 hover:bg-red-700 text-white font-black px-2 py-1 rounded text-[9px] cursor-pointer">DELETAR</button></td>` : ""}
-                        </tr>
-                    `;
-                });
-                htmlFinal += `
-                    <div class="space-y-3">
-                        <div class="bg-[#0b1224] border border-slate-700 px-4 py-2 rounded text-white font-black text-xs uppercase text-center">${cat.titulo}</div>
-                        <div class="overflow-x-auto rounded-lg border border-slate-800">
-                            <table class="hierarquia-table">
-                                <thead><tr><th>CPF</th><th>QRA</th><th>INSÍGNIA</th><th>GRADUAÇÃO</th><th>FUNÇÃO</th><th>PROMOÇÃO</th><th>PELOTÃO</th><th>ENTRADA</th><th>EDITAL</th>${adminMode ? "<th>AÇÕES</th>" : ""}</tr></thead>
-                                <tbody>${linhas}</tbody>
-                            </table>
-                        </div>
-                    </div>
-                `;
-            }
-            document.getElementById('container-tabelas').innerHTML = htmlFinal;
+    const categorias = {
+        superiores: { titulo: "OFICIAIS SUPERIORES", classeCor: "bg-superiores", dados: [] },
+        intermediarios: { titulo: "OFICIAIS INTERMEDIÁRIOS", classeCor: "bg-intermediarios", dados: [] },
+        subalternos: { titulo: "OFICIAIS SUBALTERNOS", classeCor: "bg-subalternos", dados: [] },
+        especiais: { titulo: "PRAÇAS ESPECIAIS", classeCor: "bg-especiais", dados: [] },
+        graduados: { titulo: "PRAÇAS GRADUADOS", classeCor: "bg-graduados", dados: [] },
+        pracas: { titulo: "PRAÇAS", classeCor: "bg-pracas", dados: [] }
+    };
+
+    data.forEach(p => {
+        if (categorias[p.categoria]) {
+            categorias[p.categoria].dados.push(p);
         }
+    });
 
+    let htmlFinal = "";
+
+    for (let chave in categorias) {
+
+        const cat = categorias[chave];
+
+        if (cat.dados.length === 0) continue;
+
+        let linhas = "";
+
+        cat.dados.forEach(p => {
+
+            linhas += `
+                <tr class="${cat.classeCor}">
+                    <td class="font-mono">${p.re}</td>
+                    <td class="font-bold">${p.nome}</td>
+                    <td class="font-bold">${p.graduacao}</td>
+                    <td class="font-bold">${p.funcao || "---"}</td>
+                    <td>${p.pelotao || "---"}</td>
+                </tr>
+            `;
+        });
+
+        htmlFinal += `
+            <div class="space-y-3">
+                <div class="bg-[#0b1224] border border-slate-700 px-4 py-2 rounded text-white font-black text-xs uppercase text-center">
+                    ${cat.titulo}
+                </div>
+
+                <div class="overflow-x-auto rounded-lg border border-slate-800">
+                    <table class="hierarquia-table">
+                        <thead>
+                            <tr>
+                                <th>RE</th>
+                                <th>QRA</th>
+                                <th>GRADUAÇÃO</th>
+                                <th>FUNÇÃO</th>
+                                <th>PELOTÃO</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            ${linhas}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+
+    document.getElementById('container-tabelas').innerHTML = htmlFinal;
+}
         // FUNÇÕES DO FLUXO DO RSO
         async function enviarRSO() {
             const re = document.getElementById('rso-re').value.trim();
@@ -498,12 +526,22 @@ const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
             renderizarTabelas();
         }
 
-        function removerPolicial(cpf) {
+        async function removerPolicial(cpf) {
             if (!isAdminLogado()) return;
+
             if (confirm("Deseja desligar permanentemente este policial do efetivo?")) {
-                const { data: lista = [] } = await supabaseClient.from('policiais').select('*');
-                lista = lista.filter(p => p.cpf !== cpf);
-                localStorage.setItem('banco_efetivo_v16', JSON.stringify(lista));
+
+                const { error } = await supabaseClient
+                    .from('policiais')
+                    .delete()
+                    .eq('re', cpf);
+
+                if(error){
+                    alert("Erro ao remover policial.");
+                    console.log(error);
+                    return;
+                }
+
                 renderizarTabelas();
             }
         }
